@@ -1,6 +1,7 @@
 import typing as t
 
 import tkinter
+import tkinter.messagebox as msgbox
 
 
 class InputPad(tkinter.Frame):
@@ -61,10 +62,12 @@ class InputPad(tkinter.Frame):
 
 class UI(tkinter.Tk):
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, evaluator: t.Callable[[str], float], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.title("Calculator")
         self.inputs = tkinter.StringVar(self)
         self.resizable = (False, False)
+        self.evaluator = evaluator
 
         buffer = tkinter.Entry(
             self, textvariable=self.inputs, justify=tkinter.RIGHT, font=("Calibri 20"))
@@ -77,11 +80,11 @@ class UI(tkinter.Tk):
         ).grid(row=2, column=0)
 
     def calculate(self) -> None:
+        """Get expression saved in inputs buffer and """
         expression = self.inputs.get()
         self.inputs.set('')
-        print(expression)
-
-
-if __name__ == '__main__':
-    ui = UI()
-    ui.mainloop()
+        try:
+            answer = self.evaluator(expression)
+            self.inputs.set(str(answer))
+        except ValueError as error:
+            msgbox.showerror('Invalid expression', error.args[0])

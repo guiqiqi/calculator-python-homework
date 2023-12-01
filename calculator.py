@@ -122,12 +122,40 @@ def balancing(tokens: t.List[Token]) -> None:
 
 def shunting(tokens: t.List[Token]) -> t.Iterator[Token]:
     """Shunting yard algorithm."""
-    ...
+    raise ValueError('not implemented shunting yard algorithm')
 
+
+def evaluate(tokens: t.List[Token]) -> Number:
+    """Evaluate Reverse Polish notaion.
+
+    Traverse the entire expression from left to right. 
+    If a number is encountered, it is pushed directly onto the stack. 
+    If a symbol is encountered, the top two numbers are popped off the stack.
+    
+    Example:
+    ```
+    >>> evaluate([1, 2, -, 4, 5, +, *])  # (1 - 2) * (4 + 5)
+    -9.0
+    """
+    stack = []
+    for token in tokens:
+        if not isinstance(token, Number) and not isinstance(token, Operator):
+            raise ValueError('invalid element exists in RPN')
+        if isinstance(token, Number):
+            stack.append(token)
+            continue
+        if isinstance(token, Operator):
+            if len(stack) < 2:
+                raise ValueError(f'invalid expression during reduce {token}')
+            x, y = stack.pop(), stack.pop()
+            stack.append(token(y, x))
+    
+    # Return answer and check whether still have unused numbers
+    answer = stack.pop()
+    if stack:
+        raise ValueError(f'invalid expression with redundant number {stack[0]}...')
+    return answer
 
 
 if __name__ == '__main__':
-    tokens = list(tokenize('1.2+(3.4*52^3)'))
-    prefixing(tokens)
-    balancing(tokens)
-    print(tokens)
+    print(evaluate([Number(1), Number(2), Sub, Number(4), Number(5), Add, Mul]))
