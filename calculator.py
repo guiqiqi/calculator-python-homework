@@ -51,9 +51,10 @@ Pow = Operator('^', priority=3, evaluator=operator.pow)
 Token = t.Union[Number, Braket, Operator]
 
 
-def tokenize(expr: str) -> t.Iterator[Token]:
+def tokenize(expr: str) -> t.List[Token]:
     """Tokenize user input into tokens.
     This function will try to split all user input into tokens.
+    Space char will be ignored.
 
     Raises: ValueError if occured invalid input or characters.
 
@@ -64,7 +65,12 @@ def tokenize(expr: str) -> t.Iterator[Token]:
     ```
     """
     buffer = []
+    result = []
     for partial in expr:
+
+        # Ignore space char
+        if partial == ' ':
+            continue
 
         # If input is a number or dot add it to buffer
         if partial in string.digits + '.':
@@ -74,21 +80,31 @@ def tokenize(expr: str) -> t.Iterator[Token]:
         # Otherwise means we need to given a number from buffer and clear it
         if buffer:
             try:
-                yield (Number(''.join(buffer)))
+                result.append(Number(''.join(buffer)))
             except ValueError:
                 raise ValueError(f'invalid number: {"".join(buffer)}')
             buffer.clear()
 
         # If input is not number or dot, check whether is a symbol or braket
         if partial in Operator.Symbols:
-            yield Operator.Symbols[partial]
+            result.append(Operator.Symbols[partial])
             continue
         if partial in [member.value for member in Braket]:
-            yield Braket(partial)
+            result.append(Braket(partial))
             continue
 
         # If all branches not hitted, means illegal input
         raise ValueError(f'invalid input: {partial}')
+
+    # If anything last in buffer, must be a Number
+    if buffer:
+        try:
+            result.append(Number(''.join(buffer)))
+        except ValueError:
+            raise ValueError(f'invalid number: {"".join(buffer)}')
+        buffer.clear()
+
+    return result
 
 
 def prefixing(tokens: t.List[Token]) -> None:
@@ -97,9 +113,10 @@ def prefixing(tokens: t.List[Token]) -> None:
     '+' and '-' could also be used as positive and negative indicator for a number.
     So once we add another zero once found a '+' or '-' behind a number without another number in front of.
     """
-    for index, token in enumerate(tokens[::]):
+    copied = tokens[::]
+    for index, token in enumerate(copied):
         if token is Add or token is Sub:
-            if index == 0 or not isinstance(tokens[index - 1], Number):
+            if index == 0 or not isinstance(copied[index - 1], Number):
                 tokens.insert(index, Number(0.))
 
 
@@ -120,9 +137,35 @@ def balancing(tokens: t.List[Token]) -> None:
         raise ValueError(f'unbalanced bracket at position {len(tokens)}')
 
 
-def shunting(tokens: t.List[Token]) -> t.Iterator[Token]:
+def shunting(tokens: t.List[Token]) -> t.List[Token]:
     """Shunting yard algorithm."""
-    raise ValueError('not implemented shunting yard algorithm')
+    result = []
+    stack = []
+    for token in tokens:
+        if isinstance(token, Number):
+            result.append(token)
+
+        # Check the priority for Operator liked token
+        elif isinstance(token, Operator):
+            while (stack and stack[-1] != Braket.L and
+                   stack[-1].priority >= token.priority):
+                result.append(stack.pop())
+            stack.append(token)
+
+        # If token is left bracket, push it directly
+        elif token == Braket.L:
+            stack.append(token)
+
+        # If token is right bracket, find corresponding left bracket
+        elif token == Braket.R:
+            while stack and stack[-1] != Braket.L:
+                result.append(stack.pop())
+            stack.pop()  # Pop the left bracket
+
+    # Get the rest operators
+    while stack:
+        result.append(stack.pop())
+    return result
 
 
 def evaluate(tokens: t.List[Token]) -> Number:
@@ -131,7 +174,7 @@ def evaluate(tokens: t.List[Token]) -> Number:
     Traverse the entire expression from left to right. 
     If a number is encountered, it is pushed directly onto the stack. 
     If a symbol is encountered, the top two numbers are popped off the stack.
-    
+
     Example:
     ```
     >>> evaluate([1, 2, -, 4, 5, +, *])  # (1 - 2) * (4 + 5)
@@ -149,13 +192,20 @@ def evaluate(tokens: t.List[Token]) -> Number:
                 raise ValueError(f'invalid expression during reduce {token}')
             x, y = stack.pop(), stack.pop()
             stack.append(token(y, x))
-    
+
     # Return answer and check whether still have unused numbers
     answer = stack.pop()
     if stack:
-        raise ValueError(f'invalid expression with redundant number {stack[0]}...')
+        raise ValueError(
+            f'invalid expression with redundant number {stack[0]}...')
     return answer
 
 
 if __name__ == '__main__':
-    print(evaluate([Number(1), Number(2), Sub, Number(4), Number(5), Add, Mul]))
+    tokens = tokenize('(-9 + 3) * 2')
+    prefixing(tokens)
+    balancing(tokens)
+    print(tokens)
+    rpn = shunting(tokens)
+    print(rpn)
+    print(evaluate(rpn))
