@@ -116,7 +116,8 @@ def prefixing(tokens: t.List[Token]) -> None:
     copied = tokens[::]
     for index, token in enumerate(copied):
         if token is Add or token is Sub:
-            if index == 0 or not isinstance(copied[index - 1], Number):
+            if index == 0 or (not isinstance(copied[index - 1], Number)
+                              and copied[index - 1] is not Braket.R):
                 tokens.insert(index, Number(0.))
 
 
@@ -202,10 +203,8 @@ def evaluate(tokens: t.List[Token]) -> Number:
 
 
 if __name__ == '__main__':
-    tokens = tokenize('(-9 + 3) * 2')
+    tokens = tokenize('(1.2+8.8)*3^(2/2)+1')
     prefixing(tokens)
     balancing(tokens)
-    print(tokens)
     rpn = shunting(tokens)
-    print(rpn)
     print(evaluate(rpn))
