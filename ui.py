@@ -84,9 +84,15 @@ class UI(tkinter.Tk):
         self.resizable = (False, False)
         self.evaluator = evaluator
 
-        buffer = tkinter.Entry(
+        def keypress(event: tkinter.Event) -> None:
+            """Filter all key press event and bind event."""
+            if event.keysym == 'Return':
+                self.calculate()
+
+        buffer = self.buffer = tkinter.Entry(
             self, textvariable=self.inputs, justify=tkinter.RIGHT, font=("Calibri 20"))
         buffer.grid(row=0, column=0, sticky=tkinter.NSEW, ipady=10)
+        buffer.bind('<Key>', func=keypress)
 
         InputPad(
             self,
@@ -103,5 +109,6 @@ class UI(tkinter.Tk):
         try:
             answer = self.evaluator(expression)
             self.inputs.set(str(answer).rstrip('.0'))
+            self.buffer.icursor(len(self.inputs.get()))
         except ValueError as error:
             msgbox.showerror('Invalid expression', error.args[0])
