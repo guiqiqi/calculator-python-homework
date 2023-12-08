@@ -118,7 +118,7 @@ class UI(tkinter.Tk):
             evaluator=self.calculate
         ).grid(row=2, column=0)
 
-        self.buffer.grab_set()
+        # self.buffer.grab_set()
 
     def calculate(self) -> None:
         """Get expression saved in inputs buffer and calculate for updating result."""
