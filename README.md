@@ -1,6 +1,8 @@
 # RPN Calculator with Tkinter UI
 
-##　Introduction
+![screenshot](https://github.com/guiqiqi/calculator-python-homework/raw/master/resources/screenshot.png?raw=true)
+
+## Introduction
 This project is a calculator application that supports Reverse Polish Notation (RPN). It includes a command-line interface for direct RPN conversion and evaluation, along with a graphical user interface (GUI) built using Tkinter. The calculator can handle basic arithmetic operations and is designed to provide an intuitive and efficient calculating experience.
 
 ## Features
