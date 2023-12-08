@@ -17,6 +17,11 @@ def evaluator(expression: str) -> calculator.Number:
     return calculator.evaluate(tokens)
 
 
-if __name__ == '__main__':
+def run() -> None:
+    """Run calculator."""
     ui = UI(evaluator)
     ui.mainloop()
+
+
+if __name__ == '__main__':
+    run()

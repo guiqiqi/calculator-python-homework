@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "calculator"
+version = "0.1.0"
+description = "An RPN calculator with Tkinter UI."
+authors = ["Doge Gui <guiqiqi187@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+
+[tool.poetry.group.development.dependencies]
+autopep8 = "^2.0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+test = "tests:run"
+calculator = "main:run"
