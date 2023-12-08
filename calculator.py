@@ -37,7 +37,10 @@ class Operator:
 
     def __call__(self, *numbers: Number) -> Number:
         """Call function evaluator for returning result."""
-        return self.evaluator(*numbers)
+        try:
+            return self.evaluator(*numbers)
+        except ZeroDivisionError:
+            raise ValueError('cannot divide by zero')
 
 
 Add = Operator('+', priority=0, evaluator=operator.add)
@@ -195,7 +198,10 @@ def evaluate(tokens: t.List[Token]) -> Number:
             stack.append(token(y, x))
 
     # Return answer and check whether still have unused numbers
-    answer = stack.pop()
+    try:
+        answer = stack.pop()
+    except IndexError:
+        raise ValueError(f'unkown error with rpn tokens: {tokens}')
     if stack:
         raise ValueError(
             f'invalid expression with redundant number {stack[0]}...')
