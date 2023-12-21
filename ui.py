@@ -13,7 +13,7 @@ class InputPad(tkinter.Frame):
      1 2 3 + /
      4 5 6 - %
      7 8 9 * ^
-      0  .  =
+      0     =
     """
 
     def __init__(
@@ -45,8 +45,6 @@ class InputPad(tkinter.Frame):
         numebrs[8].grid(row=3, column=1, sticky=tkinter.NSEW)
         numebrs[9].grid(row=3, column=2, sticky=tkinter.NSEW)
         numebrs[0].grid(row=4, column=0, columnspan=2, sticky=tkinter.NSEW)
-        tkinter.Button(self, text='.', command=lambda: add(
-            '.')).grid(row=4, column=2, sticky=tkinter.NSEW)
 
         # Operators buttons
         operators = {s: tkinter.Button(self, text=f'{s}',
@@ -77,7 +75,7 @@ class InputPad(tkinter.Frame):
 
 class UI(tkinter.Tk):
 
-    def __init__(self, evaluator: t.Callable[[str], float], *args, **kwargs) -> None:
+    def __init__(self, evaluator: t.Callable[[str], str], *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.title("Calculator")
         self.inputs = tkinter.StringVar(self)
@@ -126,8 +124,7 @@ class UI(tkinter.Tk):
         self.inputs.set('')
         try:
             answer = self.evaluator(expression)
-            answer = int(answer) if int(answer) == answer else round(answer, 5)
-            self.inputs.set(str(answer))
+            self.inputs.set(answer)
             self.buffer.icursor(len(self.inputs.get()))
         except ValueError as error:
             msgbox.showerror('Invalid expression', error.args[0])

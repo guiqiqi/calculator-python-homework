@@ -3,10 +3,11 @@ from __future__ import annotations
 import enum
 import string
 import operator
+import fractions
 import typing as t
 
 
-Number = float
+Number = fractions.Fraction
 
 
 @enum.unique
@@ -63,8 +64,8 @@ def tokenize(expr: str) -> t.List[Token]:
 
     Example:
     ```
-    >>> tokenize('1.2+(3.4*5.6^3)')
-    [1.2, +, Bracket.L, 3.4, *, 5.6, ^, 3.0, Bracket.R]
+    >>> tokenize('12+(34*56^3)')
+    [12, +, Bracket.L, 34, *, 56, ^, 30, Bracket.R]
     ```
     """
     buffer = []
@@ -75,8 +76,8 @@ def tokenize(expr: str) -> t.List[Token]:
         if partial == ' ':
             continue
 
-        # If input is a number or dot add it to buffer
-        if partial in string.digits + '.':
+        # If input is a number add it to buffer
+        if partial in string.digits:
             buffer.append(partial)
             continue
 
@@ -88,7 +89,7 @@ def tokenize(expr: str) -> t.List[Token]:
                 raise ValueError(f'invalid number: {"".join(buffer)}')
             buffer.clear()
 
-        # If input is not number or dot, check whether is a symbol or braket
+        # If input is not number, check whether is a symbol or braket
         if partial in Operator.Symbols:
             result.append(Operator.Symbols[partial])
             continue
@@ -121,7 +122,7 @@ def prefixing(tokens: t.List[Token]) -> None:
         if token is Add or token is Sub:
             if index == 0 or (not isinstance(copied[index - 1], Number)
                               and copied[index - 1] is not Braket.R):
-                tokens.insert(index, Number(0.))
+                tokens.insert(index, Number(0))
 
 
 def balancing(tokens: t.List[Token]) -> None:
@@ -208,9 +209,9 @@ def evaluate(tokens: t.List[Token]) -> Number:
     return answer
 
 
-if __name__ == '__main__':
-    tokens = tokenize('(1.2+8.8)*3^(2/2)+1')
-    prefixing(tokens)
-    balancing(tokens)
-    rpn = shunting(tokens)
-    print(evaluate(rpn))
+# if __name__ == '__main__':
+#     tokens = tokenize('(1.2+8.8)*3^(2/2)+1')
+#     prefixing(tokens)
+#     balancing(tokens)
+#     rpn = shunting(tokens)
+#     print(evaluate(rpn))
