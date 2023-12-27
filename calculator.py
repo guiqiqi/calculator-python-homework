@@ -97,6 +97,7 @@ class Operator:
     Symbols: t.Dict[str, Operator] = dict() 
 
     def __init__(self, symbol: str, priority: int, evaluator: t.Callable[..., Number]) -> None: 
+        self.symbol, self.priority = symbol, priority
         self.evaluator = evaluator
 
         # Check if symbol already defined in symbol dict
