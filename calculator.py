@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import enum
 import string
-import operator
 import typing as t
+
 
 def gcd(a, b):
     while b:
         a, b = b, a % b
     return a
+
 
 class Fraction:
     def __init__(self, numerator, denominator=1):
@@ -22,8 +23,10 @@ class Fraction:
         if isinstance(other, int):
             other = Fraction(other)
         if not isinstance(other, Fraction):
-            raise TypeError("Unsupported operand type(s) for +: 'Fraction' and '{}'".format(type(other).__name__))
-        numerator = self.numerator * other.denominator + other.numerator * self.denominator
+            raise TypeError(
+                "Unsupported operand type(s) for +: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator * other.denominator + \
+            other.numerator * self.denominator
         denominator = self.denominator * other.denominator
         return Fraction(numerator, denominator)
 
@@ -31,8 +34,10 @@ class Fraction:
         if isinstance(other, int):
             other = Fraction(other)
         if not isinstance(other, Fraction):
-            raise TypeError("Unsupported operand type(s) for -: 'Fraction' and '{}'".format(type(other).__name__))
-        numerator = self.numerator * other.denominator - other.numerator * self.denominator
+            raise TypeError(
+                "Unsupported operand type(s) for -: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator * other.denominator - \
+            other.numerator * self.denominator
         denominator = self.denominator * other.denominator
         return Fraction(numerator, denominator)
 
@@ -40,7 +45,8 @@ class Fraction:
         if isinstance(other, int):
             other = Fraction(other)
         if not isinstance(other, Fraction):
-            raise TypeError("Unsupported operand type(s) for *: 'Fraction' and '{}'".format(type(other).__name__))
+            raise TypeError(
+                "Unsupported operand type(s) for *: 'Fraction' and '{}'".format(type(other).__name__))
         numerator = self.numerator * other.numerator
         denominator = self.denominator * other.denominator
         return Fraction(numerator, denominator)
@@ -49,7 +55,8 @@ class Fraction:
         if isinstance(other, int):
             other = Fraction(other)
         if not isinstance(other, Fraction):
-            raise TypeError("Unsupported operand type(s) for /: 'Fraction' and '{}'".format(type(other).__name__))
+            raise TypeError(
+                "Unsupported operand type(s) for /: 'Fraction' and '{}'".format(type(other).__name__))
         numerator = self.numerator * other.denominator
         denominator = self.denominator * other.numerator
         return Fraction(numerator, denominator)
@@ -58,8 +65,10 @@ class Fraction:
         if isinstance(other, int):
             other = Fraction(other)
         if not isinstance(other, Fraction):
-            raise TypeError("Unsupported operand type(s) for %: 'Fraction' and '{}'".format(type(other).__name__))
-        numerator = (self.numerator * other.denominator) % (self.denominator * other.numerator)
+            raise TypeError("Unsupported operand type(s) for %: 'Fraction' and '{}'".format(
+                type(other).__name__))
+        numerator = (self.numerator *
+                     other.denominator) % (self.denominator * other.numerator)
         denominator = self.denominator * other.denominator
         return Fraction(numerator, denominator)
 
@@ -67,7 +76,8 @@ class Fraction:
         if isinstance(other, int):
             other = Fraction(other)
         if not isinstance(other, Fraction):
-            raise TypeError("Unsupported operand type(s) for **: 'Fraction' and '{}'".format(type(other).__name__))
+            raise TypeError(
+                "Unsupported operand type(s) for **: 'Fraction' and '{}'".format(type(other).__name__))
         numerator = self.numerator ** other.numerator
         denominator = self.denominator ** other.denominator
         return Fraction(numerator, denominator)
@@ -77,13 +87,13 @@ class Fraction:
 
     def __repr__(self):
         return "Fraction({}, {})".format(self.numerator, self.denominator)
-    
+
+
 Number = Fraction
 
 
-
 @enum.unique
-class Braket(enum.Enum):#&
+class Braket(enum.Enum):  # &
     L = '('
     R = ')'
 
@@ -91,12 +101,11 @@ class Braket(enum.Enum):#&
         return f'{self.__class__.__name__}.{self.name}'
 
 
-
 class Operator:
 
-    Symbols: t.Dict[str, Operator] = dict() 
+    Symbols: t.Dict[str, Operator] = dict()
 
-    def __init__(self, symbol: str, priority: int, evaluator: t.Callable[..., Number]) -> None: 
+    def __init__(self, symbol: str, priority: int, evaluator: t.Callable[..., Number]) -> None:
         self.symbol, self.priority = symbol, priority
         self.evaluator = evaluator
 
@@ -118,20 +127,26 @@ class Operator:
 def add_fractions(a, b):
     return a + b
 
+
 def subtract_fractions(a, b):
     return a - b
+
 
 def multiply_fractions(a, b):
     return a * b
 
+
 def divide_fractions(a, b):
     return a / b
+
 
 def modulo_fractions(a, b):
     return a % b
 
+
 def power_fractions(a, b):
     return a ** b
+
 
 # Создание операторов с помощью класса Operator
 Add = Operator('+', 0, add_fractions)
@@ -140,7 +155,6 @@ Mul = Operator('*', 1, multiply_fractions)
 Div = Operator('/', 1, divide_fractions)
 Mod = Operator('%', 2, modulo_fractions)
 Pow = Operator('^', 3, power_fractions)
-
 
 
 Token = t.Union[Number, Braket, Operator]
@@ -152,7 +166,7 @@ def tokenize(expr: str) -> t.List[Token]:
     for partial in expr:
         if partial == ' ':
             continue
-        if partial in string.digits + '.':
+        if partial in string.digits:
             buffer.append(partial)
             continue
         if buffer:
@@ -187,7 +201,7 @@ def prefixing(tokens: t.List[Token]) -> None:
     for index, token in enumerate(copied):
         if token is Add or token is Sub:
             if index == 0 or not isinstance(copied[index - 1], Number):
-                tokens.insert(index, Number(0,1))
+                tokens.insert(index, Number(0, 1))
 
 
 def balancing(tokens: t.List[Token]) -> None:
@@ -270,12 +284,13 @@ def evaluate(tokens: t.List[Token]) -> Number:
             f'invalid expression with redundant number {stack[0]}...')
     return answer
 
-"""""
-if __name__ == '__main__':
-    tokens = tokenize('(-9 + 3) * 2')
-    prefixing(tokens)
-    balancing(tokens)
-    print(tokens)
-    rpn = shunting(tokens)
-    print(rpn)
-    print(evaluate(rpn))"""
+
+# """""
+# if __name__ == '__main__':
+#     tokens = tokenize('(-9 + 3) * 2')
+#     prefixing(tokens)
+#     balancing(tokens)
+#     print(tokens)
+#     rpn = shunting(tokens)
+#     print(rpn)
+#     print(evaluate(rpn))"""
