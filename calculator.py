@@ -3,15 +3,87 @@ from __future__ import annotations
 import enum
 import string
 import operator
-import fractions
 import typing as t
 
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
 
-Number = fractions.Fraction
+class Fraction:
+    def __init__(self, numerator, denominator=1):
+        if denominator == 0:
+            raise ValueError("Denominator cannot be zero.")
+        gcd_value = gcd(numerator, denominator)
+        self.numerator = numerator // gcd_value
+        self.denominator = denominator // gcd_value
+
+    def __add__(self, other):
+        if isinstance(other, int):
+            other = Fraction(other)
+        if not isinstance(other, Fraction):
+            raise TypeError("Unsupported operand type(s) for +: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator * other.denominator + other.numerator * self.denominator
+        denominator = self.denominator * other.denominator
+        return Fraction(numerator, denominator)
+
+    def __sub__(self, other):
+        if isinstance(other, int):
+            other = Fraction(other)
+        if not isinstance(other, Fraction):
+            raise TypeError("Unsupported operand type(s) for -: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator * other.denominator - other.numerator * self.denominator
+        denominator = self.denominator * other.denominator
+        return Fraction(numerator, denominator)
+
+    def __mul__(self, other):
+        if isinstance(other, int):
+            other = Fraction(other)
+        if not isinstance(other, Fraction):
+            raise TypeError("Unsupported operand type(s) for *: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator * other.numerator
+        denominator = self.denominator * other.denominator
+        return Fraction(numerator, denominator)
+
+    def __truediv__(self, other):
+        if isinstance(other, int):
+            other = Fraction(other)
+        if not isinstance(other, Fraction):
+            raise TypeError("Unsupported operand type(s) for /: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator * other.denominator
+        denominator = self.denominator * other.numerator
+        return Fraction(numerator, denominator)
+
+    def __mod__(self, other):
+        if isinstance(other, int):
+            other = Fraction(other)
+        if not isinstance(other, Fraction):
+            raise TypeError("Unsupported operand type(s) for %: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = (self.numerator * other.denominator) % (self.denominator * other.numerator)
+        denominator = self.denominator * other.denominator
+        return Fraction(numerator, denominator)
+
+    def __pow__(self, other):
+        if isinstance(other, int):
+            other = Fraction(other)
+        if not isinstance(other, Fraction):
+            raise TypeError("Unsupported operand type(s) for **: 'Fraction' and '{}'".format(type(other).__name__))
+        numerator = self.numerator ** other.numerator
+        denominator = self.denominator ** other.denominator
+        return Fraction(numerator, denominator)
+
+    def __str__(self):
+        return "{}/{}".format(self.numerator, self.denominator)
+
+    def __repr__(self):
+        return "Fraction({}, {})".format(self.numerator, self.denominator)
+    
+Number = Fraction
+
 
 
 @enum.unique
-class Braket(enum.Enum):
+class Braket(enum.Enum):#&
     L = '('
     R = ')'
 
@@ -19,12 +91,12 @@ class Braket(enum.Enum):
         return f'{self.__class__.__name__}.{self.name}'
 
 
+
 class Operator:
 
-    Symbols: t.Dict[str, Operator] = dict()
+    Symbols: t.Dict[str, Operator] = dict() 
 
-    def __init__(self, symbol: str, priority: int, evaluator: t.Callable[..., Number]) -> None:
-        self.symbol, self.priority = symbol, priority
+    def __init__(self, symbol: str, priority: int, evaluator: t.Callable[..., Number]) -> None: 
         self.evaluator = evaluator
 
         # Check if symbol already defined in symbol dict
@@ -38,76 +110,69 @@ class Operator:
 
     def __call__(self, *numbers: Number) -> Number:
         """Call function evaluator for returning result."""
-        try:
-            return self.evaluator(*numbers)
-        except ZeroDivisionError:
-            raise ValueError('cannot divide by zero')
+        return self.evaluator(*numbers)
 
 
-Add = Operator('+', priority=0, evaluator=operator.add)
-Sub = Operator('-', priority=0, evaluator=operator.sub)
-Mul = Operator('*', priority=1, evaluator=operator.mul)
-Div = Operator('/', priority=1, evaluator=operator.truediv)
-Mod = Operator('%', priority=1, evaluator=operator.mod)
-Pow = Operator('^', priority=3, evaluator=operator.pow)
+# Функции для вычисления операций с дробями
+def add_fractions(a, b):
+    return a + b
+
+def subtract_fractions(a, b):
+    return a - b
+
+def multiply_fractions(a, b):
+    return a * b
+
+def divide_fractions(a, b):
+    return a / b
+
+def modulo_fractions(a, b):
+    return a % b
+
+def power_fractions(a, b):
+    return a ** b
+
+# Создание операторов с помощью класса Operator
+Add = Operator('+', 0, add_fractions)
+Sub = Operator('-', 0, subtract_fractions)
+Mul = Operator('*', 1, multiply_fractions)
+Div = Operator('/', 1, divide_fractions)
+Mod = Operator('%', 2, modulo_fractions)
+Pow = Operator('^', 3, power_fractions)
+
 
 
 Token = t.Union[Number, Braket, Operator]
 
 
 def tokenize(expr: str) -> t.List[Token]:
-    """Tokenize user input into tokens.
-    This function will try to split all user input into tokens.
-    Space char will be ignored.
-
-    Raises: ValueError if occured invalid input or characters.
-
-    Example:
-    ```
-    >>> tokenize('12+(34*56^3)')
-    [12, +, Bracket.L, 34, *, 56, ^, 30, Bracket.R]
-    ```
-    """
     buffer = []
     result = []
     for partial in expr:
-
-        # Ignore space char
         if partial == ' ':
             continue
-
-        # If input is a number add it to buffer
-        if partial in string.digits:
+        if partial in string.digits + '.':
             buffer.append(partial)
             continue
-
-        # Otherwise means we need to given a number from buffer and clear it
         if buffer:
             try:
-                result.append(Number(''.join(buffer)))
+                result.append(Number(int(''.join(buffer))))
             except ValueError:
                 raise ValueError(f'invalid number: {"".join(buffer)}')
             buffer.clear()
-
-        # If input is not number, check whether is a symbol or braket
         if partial in Operator.Symbols:
             result.append(Operator.Symbols[partial])
             continue
         if partial in [member.value for member in Braket]:
             result.append(Braket(partial))
             continue
-
-        # If all branches not hitted, means illegal input
         raise ValueError(f'invalid input: {partial}')
-
-    # If anything last in buffer, must be a Number
     if buffer:
         try:
-            result.append(Number(''.join(buffer)))
+            result.append(Number(int(''.join(buffer))))
         except ValueError:
             raise ValueError(f'invalid number: {"".join(buffer)}')
         buffer.clear()
-
     return result
 
 
@@ -120,9 +185,8 @@ def prefixing(tokens: t.List[Token]) -> None:
     copied = tokens[::]
     for index, token in enumerate(copied):
         if token is Add or token is Sub:
-            if index == 0 or (not isinstance(copied[index - 1], Number)
-                              and copied[index - 1] is not Braket.R):
-                tokens.insert(index, Number(0))
+            if index == 0 or not isinstance(copied[index - 1], Number):
+                tokens.insert(index, Number(0,1))
 
 
 def balancing(tokens: t.List[Token]) -> None:
@@ -199,19 +263,18 @@ def evaluate(tokens: t.List[Token]) -> Number:
             stack.append(token(y, x))
 
     # Return answer and check whether still have unused numbers
-    try:
-        answer = stack.pop()
-    except IndexError:
-        raise ValueError(f'unkown error with rpn tokens: {tokens}')
+    answer = stack.pop()
     if stack:
         raise ValueError(
             f'invalid expression with redundant number {stack[0]}...')
     return answer
 
-
-# if __name__ == '__main__':
-#     tokens = tokenize('(1.2+8.8)*3^(2/2)+1')
-#     prefixing(tokens)
-#     balancing(tokens)
-#     rpn = shunting(tokens)
-#     print(evaluate(rpn))
+"""""
+if __name__ == '__main__':
+    tokens = tokenize('(-9 + 3) * 2')
+    prefixing(tokens)
+    balancing(tokens)
+    print(tokens)
+    rpn = shunting(tokens)
+    print(rpn)
+    print(evaluate(rpn))"""
